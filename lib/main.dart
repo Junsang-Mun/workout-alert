@@ -157,14 +157,23 @@ class _WorkoutHomePageState extends State<WorkoutHomePage> {
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 24),
           child: Row(
-            children: const [
-              Icon(Icons.self_improvement, color: Colors.grey, size: 28),
-              SizedBox(width: 16),
-              Expanded(
+            children: [
+              const Icon(Icons.self_improvement, color: Colors.grey, size: 28),
+              const SizedBox(width: 16),
+              const Expanded(
                 child: Text(
                   '이 날은 운동 안 하기로 했어요 🙃',
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
                 ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.refresh, color: Colors.teal, size: 24),
+                tooltip: '운동 기록 입력으로 되돌리기',
+                onPressed: () {
+                  setState(() {
+                    _workoutData.remove(_selectedDay!);
+                  });
+                },
               ),
             ],
           ),
@@ -192,20 +201,33 @@ class _WorkoutHomePageState extends State<WorkoutHomePage> {
               ],
             ),
             const SizedBox(height: 14),
-            ...logs.map(
-              (log) => Padding(
+            ...logs.asMap().entries.map(
+              (entry) => Padding(
                 padding: const EdgeInsets.only(bottom: 6),
                 child: Row(
                   children: [
                     const Icon(Icons.check_circle, color: Colors.teal, size: 20),
                     const SizedBox(width: 8),
                     Text(
-                      '${log.type} ',
+                      '${entry.value.type} ',
                       style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
                     ),
                     Text(
-                      '${log.minutes}분',
+                      '${entry.value.minutes}분',
                       style: const TextStyle(fontSize: 15, color: Colors.black87),
+                    ),
+                    // Stick delete icon to the right
+                    const Spacer(),
+                    IconButton(
+                      icon: const Icon(Icons.delete, color: Colors.redAccent, size: 20),
+                      tooltip: '삭제',
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                      onPressed: () {
+                        setState(() {
+                          logs.removeAt(entry.key);
+                        });
+                      },
                     ),
                   ],
                 ),
