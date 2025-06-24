@@ -135,7 +135,11 @@ class _WorkoutHomePageState extends State<WorkoutHomePage> {
           padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 24),
           child: Row(
             children: const [
-              Icon(Icons.sentiment_dissatisfied, color: Colors.orange, size: 28),
+              Icon(
+                Icons.sentiment_dissatisfied,
+                color: Colors.orange,
+                size: 28,
+              ),
               SizedBox(width: 16),
               Expanded(
                 child: Text(
@@ -196,7 +200,10 @@ class _WorkoutHomePageState extends State<WorkoutHomePage> {
                 const SizedBox(width: 12),
                 Text(
                   '${_selectedDay!.year}-${_selectedDay!.month.toString().padLeft(2, '0')}-${_selectedDay!.day.toString().padLeft(2, '0')} 운동 기록',
-                  style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ],
             ),
@@ -206,20 +213,34 @@ class _WorkoutHomePageState extends State<WorkoutHomePage> {
                 padding: const EdgeInsets.only(bottom: 6),
                 child: Row(
                   children: [
-                    const Icon(Icons.check_circle, color: Colors.teal, size: 20),
+                    const Icon(
+                      Icons.check_circle,
+                      color: Colors.teal,
+                      size: 20,
+                    ),
                     const SizedBox(width: 8),
                     Text(
                       '${entry.value.type} ',
-                      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                     Text(
                       '${entry.value.minutes}분',
-                      style: const TextStyle(fontSize: 15, color: Colors.black87),
+                      style: const TextStyle(
+                        fontSize: 15,
+                        color: Colors.black87,
+                      ),
                     ),
                     // Stick delete icon to the right
                     const Spacer(),
                     IconButton(
-                      icon: const Icon(Icons.delete, color: Colors.redAccent, size: 20),
+                      icon: const Icon(
+                        Icons.delete,
+                        color: Colors.redAccent,
+                        size: 20,
+                      ),
                       tooltip: '삭제',
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
@@ -275,14 +296,6 @@ class _WorkoutHomePageState extends State<WorkoutHomePage> {
             calendarBuilders: CalendarBuilders(
               todayBuilder: (context, day, _) {
                 return Container(
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: Colors.teal,
-                      style: BorderStyle.solid,
-                      width: 1,
-                    ),
-                  ),
                   child: Center(
                     child: Text(
                       '${day.day}',
@@ -340,7 +353,7 @@ class _WorkoutHomePageState extends State<WorkoutHomePage> {
                     ),
                   ),
                   onPressed: _handleNoPressed,
-                  child: const Text('No', style: TextStyle(fontSize: 16)),
+                  child: const Text('운동 안 할래요', style: TextStyle(fontSize: 16)),
                 ),
                 OutlinedButton(
                   style: OutlinedButton.styleFrom(
@@ -352,7 +365,7 @@ class _WorkoutHomePageState extends State<WorkoutHomePage> {
                   ),
                   onPressed: _handleYesPressed,
                   child: const Text(
-                    'Yes',
+                    '운동 했어요',
                     style: TextStyle(fontSize: 16, color: Colors.white),
                   ),
                 ),
