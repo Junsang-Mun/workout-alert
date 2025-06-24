@@ -35,7 +35,8 @@ class _WorkoutHomePageState extends State<WorkoutHomePage> {
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
 
-  final Map<DateTime, WorkoutLog?> _workoutData = {}; // null = No 운동
+  // Change to store a list of WorkoutLog per day
+  final Map<DateTime, List<WorkoutLog>> _workoutData = {};
 
   DateTime dateOnly(DateTime dt) => DateTime(dt.year, dt.month, dt.day);
 
@@ -61,7 +62,12 @@ class _WorkoutHomePageState extends State<WorkoutHomePage> {
 
     if (result != null && result is WorkoutLog) {
       setState(() {
-        _workoutData[dateOnly(_selectedDay!)] = result;
+        final key = dateOnly(_selectedDay!);
+        if (_workoutData.containsKey(key)) {
+          _workoutData[key]!.add(result);
+        } else {
+          _workoutData[key] = [result];
+        }
       });
     }
   }
@@ -82,7 +88,8 @@ class _WorkoutHomePageState extends State<WorkoutHomePage> {
           TextButton(
             onPressed: () {
               setState(() {
-                _workoutData[dateOnly(_selectedDay!)] = null;
+                // Mark as "no workout" by setting an empty list
+                _workoutData[dateOnly(_selectedDay!)] = [];
               });
               Navigator.pop(context);
             },
@@ -95,31 +102,123 @@ class _WorkoutHomePageState extends State<WorkoutHomePage> {
 
   Widget _buildSelectedDayWorkoutSummary() {
     if (_selectedDay == null) {
-      return const Text(
-        '날짜를 선택해 운동 기록을 확인하세요.',
-        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+      return Card(
+        elevation: 2,
+        margin: const EdgeInsets.symmetric(horizontal: 24),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 24),
+          child: Row(
+            children: const [
+              Icon(Icons.info_outline, color: Colors.teal, size: 28),
+              SizedBox(width: 16),
+              Expanded(
+                child: Text(
+                  '날짜를 선택해 운동 기록을 확인하세요.',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                ),
+              ),
+            ],
+          ),
+        ),
       );
     }
 
-    final log = _workoutData[_selectedDay!];
+    final logs = _workoutData[_selectedDay!];
 
     if (!_workoutData.containsKey(_selectedDay!)) {
-      return const Text(
-        '이 날은 아직 운동을 안 하셨어요 😅',
-        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+      return Card(
+        elevation: 2,
+        margin: const EdgeInsets.symmetric(horizontal: 24),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 24),
+          child: Row(
+            children: const [
+              Icon(Icons.sentiment_dissatisfied, color: Colors.orange, size: 28),
+              SizedBox(width: 16),
+              Expanded(
+                child: Text(
+                  '이 날은 아직 운동을 안 하셨어요 😅',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                ),
+              ),
+            ],
+          ),
+        ),
       );
     }
 
-    if (log == null) {
-      return const Text(
-        '이 날은 운동 안 하기로 했어요 🙃',
-        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+    if (logs == null || logs.isEmpty) {
+      return Card(
+        elevation: 2,
+        margin: const EdgeInsets.symmetric(horizontal: 24),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 24),
+          child: Row(
+            children: const [
+              Icon(Icons.self_improvement, color: Colors.grey, size: 28),
+              SizedBox(width: 16),
+              Expanded(
+                child: Text(
+                  '이 날은 운동 안 하기로 했어요 🙃',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                ),
+              ),
+            ],
+          ),
+        ),
       );
     }
 
-    return Text(
-      '${_selectedDay!.year}-${_selectedDay!.month.toString().padLeft(2, '0')}-${_selectedDay!.day.toString().padLeft(2, '0')}: ${log.type}을(를) ${log.minutes}분 했어요 💪',
-      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+    return Card(
+      elevation: 3,
+      margin: const EdgeInsets.symmetric(horizontal: 24),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.fitness_center, color: Colors.teal, size: 28),
+                const SizedBox(width: 12),
+                Text(
+                  '${_selectedDay!.year}-${_selectedDay!.month.toString().padLeft(2, '0')}-${_selectedDay!.day.toString().padLeft(2, '0')} 운동 기록',
+                  style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            ...logs.map(
+              (log) => Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: Row(
+                  children: [
+                    const Icon(Icons.check_circle, color: Colors.teal, size: 20),
+                    const SizedBox(width: 8),
+                    Text(
+                      '${log.type} ',
+                      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                    ),
+                    Text(
+                      '${log.minutes}분',
+                      style: const TextStyle(fontSize: 15, color: Colors.black87),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Align(
+              alignment: Alignment.centerRight,
+              child: Text('💪', style: TextStyle(fontSize: 22)),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -174,10 +273,14 @@ class _WorkoutHomePageState extends State<WorkoutHomePage> {
                 );
               },
               defaultBuilder: (context, day, _) {
-                final log = _workoutData[dateOnly(day)];
+                final logs = _workoutData[dateOnly(day)];
                 String symbol = '';
-                if (log != null) {
-                  symbol = log.type.isNotEmpty ? '✔️' : '✖️';
+                if (logs != null) {
+                  if (logs.isNotEmpty) {
+                    symbol = '✔️';
+                  } else {
+                    symbol = '✖️';
+                  }
                 }
 
                 return Center(
