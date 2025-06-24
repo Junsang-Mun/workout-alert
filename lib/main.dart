@@ -1,4 +1,4 @@
-// lib/main.dart
+// main.dart
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'workout_input_page.dart';
@@ -15,8 +15,18 @@ class WorkoutTrackerApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: '듀오는 언어 말고도 운동을 원해요',
+      themeMode: ThemeMode.system,
       theme: ThemeData(
+        brightness: Brightness.light,
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal),
+        useMaterial3: true,
+      ),
+      darkTheme: ThemeData(
+        brightness: Brightness.dark,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.teal,
+          brightness: Brightness.dark,
+        ),
         useMaterial3: true,
       ),
       home: const WorkoutHomePage(),
@@ -34,12 +44,9 @@ class WorkoutHomePage extends StatefulWidget {
 class _WorkoutHomePageState extends State<WorkoutHomePage> {
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
-
-  // Change to store a list of WorkoutLog per day
   final Map<DateTime, List<WorkoutLog>> _workoutData = {};
 
   DateTime dateOnly(DateTime dt) => DateTime(dt.year, dt.month, dt.day);
-
   DateTime get _today => dateOnly(DateTime.now());
 
   void _handleDaySelected(DateTime selectedDay, DateTime focusedDay) {
@@ -63,11 +70,7 @@ class _WorkoutHomePageState extends State<WorkoutHomePage> {
     if (result != null && result is WorkoutLog) {
       setState(() {
         final key = dateOnly(_selectedDay!);
-        if (_workoutData.containsKey(key)) {
-          _workoutData[key]!.add(result);
-        } else {
-          _workoutData[key] = [result];
-        }
+        _workoutData.putIfAbsent(key, () => []).add(result);
       });
     }
   }
@@ -88,7 +91,6 @@ class _WorkoutHomePageState extends State<WorkoutHomePage> {
           TextButton(
             onPressed: () {
               setState(() {
-                // Mark as "no workout" by setting an empty list
                 _workoutData[dateOnly(_selectedDay!)] = [];
               });
               Navigator.pop(context);
@@ -100,173 +102,10 @@ class _WorkoutHomePageState extends State<WorkoutHomePage> {
     );
   }
 
-  Widget _buildSelectedDayWorkoutSummary() {
-    if (_selectedDay == null) {
-      return Card(
-        elevation: 2,
-        margin: const EdgeInsets.symmetric(horizontal: 24),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 24),
-          child: Row(
-            children: const [
-              Icon(Icons.info_outline, color: Colors.teal, size: 28),
-              SizedBox(width: 16),
-              Expanded(
-                child: Text(
-                  '날짜를 선택해 운동 기록을 확인하세요.',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    final logs = _workoutData[_selectedDay!];
-
-    if (!_workoutData.containsKey(_selectedDay!)) {
-      return Card(
-        elevation: 2,
-        margin: const EdgeInsets.symmetric(horizontal: 24),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 24),
-          child: Row(
-            children: const [
-              Icon(
-                Icons.sentiment_dissatisfied,
-                color: Colors.orange,
-                size: 28,
-              ),
-              SizedBox(width: 16),
-              Expanded(
-                child: Text(
-                  '이 날은 아직 운동을 안 하셨어요 😅',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    if (logs == null || logs.isEmpty) {
-      return Card(
-        elevation: 2,
-        margin: const EdgeInsets.symmetric(horizontal: 24),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 24),
-          child: Row(
-            children: [
-              const Icon(Icons.self_improvement, color: Colors.grey, size: 28),
-              const SizedBox(width: 16),
-              const Expanded(
-                child: Text(
-                  '이 날은 운동 안 하기로 했어요 🙃',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-                ),
-              ),
-              IconButton(
-                icon: const Icon(Icons.refresh, color: Colors.teal, size: 24),
-                tooltip: '운동 기록 입력으로 되돌리기',
-                onPressed: () {
-                  setState(() {
-                    _workoutData.remove(_selectedDay!);
-                  });
-                },
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    return Card(
-      elevation: 3,
-      margin: const EdgeInsets.symmetric(horizontal: 24),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                const Icon(Icons.fitness_center, color: Colors.teal, size: 28),
-                const SizedBox(width: 12),
-                Text(
-                  '${_selectedDay!.year}-${_selectedDay!.month.toString().padLeft(2, '0')}-${_selectedDay!.day.toString().padLeft(2, '0')} 운동 기록',
-                  style: const TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 14),
-            ...logs.asMap().entries.map(
-              (entry) => Padding(
-                padding: const EdgeInsets.only(bottom: 6),
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.check_circle,
-                      color: Colors.teal,
-                      size: 20,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      '${entry.value.type} ',
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    Text(
-                      '${entry.value.minutes}분',
-                      style: const TextStyle(
-                        fontSize: 15,
-                        color: Colors.black87,
-                      ),
-                    ),
-                    // Stick delete icon to the right
-                    const Spacer(),
-                    IconButton(
-                      icon: const Icon(
-                        Icons.delete,
-                        color: Colors.redAccent,
-                        size: 20,
-                      ),
-                      tooltip: '삭제',
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
-                      onPressed: () {
-                        setState(() {
-                          logs.removeAt(entry.key);
-                        });
-                      },
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Align(
-              alignment: Alignment.centerRight,
-              child: Text('💪', style: TextStyle(fontSize: 22)),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
+    final logs = _workoutData[_selectedDay];
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('듀오는 언어 말고도 운동을 원해요'),
@@ -286,38 +125,25 @@ class _WorkoutHomePageState extends State<WorkoutHomePage> {
             calendarStyle: CalendarStyle(
               todayDecoration: BoxDecoration(
                 shape: BoxShape.circle,
-                border: Border.all(
-                  color: Colors.teal,
-                  style: BorderStyle.solid,
-                  width: 1,
-                ),
+                border: Border.all(color: Colors.teal),
               ),
             ),
             calendarBuilders: CalendarBuilders(
-              todayBuilder: (context, day, _) {
-                return Container(
-                  child: Center(
-                    child: Text(
-                      '${day.day}',
-                      style: const TextStyle(
-                        color: Colors.teal,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+              todayBuilder: (context, day, _) => Center(
+                child: Text(
+                  '${day.day}',
+                  style: const TextStyle(
+                    color: Colors.teal,
+                    fontWeight: FontWeight.bold,
                   ),
-                );
-              },
+                ),
+              ),
               defaultBuilder: (context, day, _) {
                 final logs = _workoutData[dateOnly(day)];
                 String symbol = '';
                 if (logs != null) {
-                  if (logs.isNotEmpty) {
-                    symbol = '✔️';
-                  } else {
-                    symbol = '✖️';
-                  }
+                  symbol = logs.isEmpty ? '✖️' : '✔️';
                 }
-
                 return Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -331,43 +157,128 @@ class _WorkoutHomePageState extends State<WorkoutHomePage> {
               },
             ),
           ),
-
-          // 👇 선택한 날짜 운동 기록 표시 영역
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            child: _buildSelectedDayWorkoutSummary(),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+              child: Card(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: _selectedDay == null
+                      ? const Center(child: Text('날짜를 선택해 운동 기록을 확인하세요.'))
+                      : logs == null
+                      ? const Center(child: Text('이 날은 아직 운동을 안 하셨어요 😅'))
+                      : logs.isEmpty
+                      ? Row(
+                          children: [
+                            const Icon(
+                              Icons.self_improvement,
+                              color: Colors.grey,
+                            ),
+                            const SizedBox(width: 12),
+                            const Expanded(child: Text('이 날은 운동 안 하기로 했어요 🙃')),
+                            IconButton(
+                              icon: const Icon(
+                                Icons.refresh,
+                                color: Colors.teal,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _workoutData.remove(_selectedDay!);
+                                });
+                              },
+                            ),
+                          ],
+                        )
+                      : Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                const Icon(
+                                  Icons.fitness_center,
+                                  color: Colors.teal,
+                                ),
+                                const SizedBox(width: 12),
+                                Text(
+                                  '${_selectedDay!.year}-${_selectedDay!.month.toString().padLeft(2, '0')}-${_selectedDay!.day.toString().padLeft(2, '0')} 운동 기록',
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            Expanded(
+                              child: ListView.builder(
+                                itemCount: logs.length,
+                                itemBuilder: (context, index) {
+                                  final log = logs[index];
+                                  return Padding(
+                                    padding: const EdgeInsets.only(bottom: 6),
+                                    child: Row(
+                                      children: [
+                                        const Icon(
+                                          Icons.check_circle,
+                                          color: Colors.teal,
+                                          size: 20,
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          log.type,
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Text('${log.minutes}분'),
+                                        const Spacer(),
+                                        IconButton(
+                                          icon: const Icon(
+                                            Icons.delete,
+                                            color: Colors.redAccent,
+                                          ),
+                                          onPressed: () {
+                                            setState(() {
+                                              logs.removeAt(index);
+                                            });
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            const Align(
+                              alignment: Alignment.centerRight,
+                              child: Text('💪', style: TextStyle(fontSize: 22)),
+                            ),
+                          ],
+                        ),
+                ),
+              ),
+            ),
           ),
-
-          const Spacer(),
-
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 OutlinedButton(
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 12,
-                      horizontal: 20,
-                    ),
-                  ),
                   onPressed: _handleNoPressed,
-                  child: const Text('운동 안 할래요', style: TextStyle(fontSize: 16)),
+                  child: const Text('운동 안 할래요'),
                 ),
-                OutlinedButton(
-                  style: OutlinedButton.styleFrom(
-                    backgroundColor: Colors.teal,
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 12,
-                      horizontal: 20,
-                    ),
-                  ),
+                ElevatedButton(
                   onPressed: _handleYesPressed,
-                  child: const Text(
-                    '운동 했어요',
-                    style: TextStyle(fontSize: 16, color: Colors.white),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Theme.of(context).colorScheme.primary,
                   ),
+                  child: const Text('운동 했어요'),
                 ),
               ],
             ),
