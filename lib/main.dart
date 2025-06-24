@@ -14,7 +14,7 @@ class WorkoutTrackerApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Workout Tracker',
+      title: '듀오는 언어 말고도 운동을 원해요',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal),
         useMaterial3: true,
@@ -49,51 +49,6 @@ class _WorkoutHomePageState extends State<WorkoutHomePage> {
       _selectedDay = selected;
       _focusedDay = focusedDay;
     });
-
-    final log = _workoutData[selected];
-    if (!_workoutData.containsKey(selected)) {
-      showDialog(
-        context: context,
-        builder: (_) => AlertDialog(
-          title: const Text('운동 기록 없음'),
-          content: const Text('이 날은 운동 기록이 없습니다.'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('닫기'),
-            ),
-          ],
-        ),
-      );
-    } else if (log == null) {
-      showDialog(
-        context: context,
-        builder: (_) => AlertDialog(
-          title: const Text('운동하지 않음'),
-          content: const Text('이 날은 운동을 하지 않았습니다.'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('확인'),
-            ),
-          ],
-        ),
-      );
-    } else {
-      showDialog(
-        context: context,
-        builder: (_) => AlertDialog(
-          title: const Text('운동 기록'),
-          content: Text('${log.type}을(를) ${log.minutes}분 했어요.'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('확인'),
-            ),
-          ],
-        ),
-      );
-    }
   }
 
   Future<void> _handleYesPressed() async {
@@ -138,25 +93,32 @@ class _WorkoutHomePageState extends State<WorkoutHomePage> {
     );
   }
 
-  Widget _buildTodayWorkoutSummary() {
-    final todayLog = _workoutData[_today];
-
-    if (!_workoutData.containsKey(_today)) {
+  Widget _buildSelectedDayWorkoutSummary() {
+    if (_selectedDay == null) {
       return const Text(
-        '오늘은 아직 운동을 안 하셨어요 😅',
+        '날짜를 선택해 운동 기록을 확인하세요.',
         style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
       );
     }
 
-    if (todayLog == null) {
+    final log = _workoutData[_selectedDay!];
+
+    if (!_workoutData.containsKey(_selectedDay!)) {
       return const Text(
-        '오늘은 운동 안 하기로 했어요 🙃',
+        '이 날은 아직 운동을 안 하셨어요 😅',
+        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+      );
+    }
+
+    if (log == null) {
+      return const Text(
+        '이 날은 운동 안 하기로 했어요 🙃',
         style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
       );
     }
 
     return Text(
-      '오늘은 ${todayLog.type}을(를) ${todayLog.minutes}분 했어요 💪',
+      '${_selectedDay!.year}-${_selectedDay!.month.toString().padLeft(2, '0')}-${_selectedDay!.day.toString().padLeft(2, '0')}: ${log.type}을(를) ${log.minutes}분 했어요 💪',
       style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
     );
   }
@@ -232,10 +194,10 @@ class _WorkoutHomePageState extends State<WorkoutHomePage> {
             ),
           ),
 
-          // 👇 오늘 운동 기록 표시 영역
+          // 👇 선택한 날짜 운동 기록 표시 영역
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 16),
-            child: _buildTodayWorkoutSummary(),
+            child: _buildSelectedDayWorkoutSummary(),
           ),
 
           const Spacer(),
