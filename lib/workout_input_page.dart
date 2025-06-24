@@ -44,6 +44,7 @@ class _WorkoutInputPageState extends State<WorkoutInputPage> {
             const SizedBox(height: 12),
             GridView.count(
               crossAxisCount: 4,
+              childAspectRatio: 0.8,
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               children: workoutOptions.map((option) {
@@ -54,6 +55,8 @@ class _WorkoutInputPageState extends State<WorkoutInputPage> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Container(
+                        width: 72,
+                        height: 72,
                         decoration: BoxDecoration(
                           color: isSelected
                               ? Colors.teal.shade100
@@ -75,6 +78,7 @@ class _WorkoutInputPageState extends State<WorkoutInputPage> {
                               ? FontWeight.bold
                               : FontWeight.normal,
                         ),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   ),
