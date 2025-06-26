@@ -1,6 +1,8 @@
 // main.dart
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
+import 'package:sqflite/sqflite.dart';
+import 'package:path/path.dart' as Path;
 import 'workout_input_page.dart';
 import 'workout_log.dart';
 
@@ -43,8 +45,87 @@ class WorkoutHomePage extends StatefulWidget {
 
 class _WorkoutHomePageState extends State<WorkoutHomePage> {
   DateTime _focusedDay = DateTime.now();
-  DateTime? _selectedDay;
+  DateTime? _selectedDay = DateTime.now(); // Select today by default
   final Map<DateTime, List<WorkoutLog>> _workoutData = {};
+
+  Database? _db;
+
+  @override
+  void initState() {
+    super.initState();
+    _initDbAndLoad();
+  }
+
+  Future<void> _initDbAndLoad() async {
+    final dbPath = await getDatabasesPath();
+    final path = Path.join(dbPath, 'workout_logs.db');
+    _db = await openDatabase(
+      path,
+      version: 1,
+      onCreate: (db, version) async {
+        await db.execute('''
+          CREATE TABLE workout_logs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            date TEXT,
+            type TEXT,
+            minutes INTEGER
+          )
+        ''');
+      },
+    );
+    await _loadWorkoutData();
+  }
+
+  Future<void> _loadWorkoutData() async {
+    if (_db == null) return;
+    final result = await _db!.query('workout_logs');
+    _workoutData.clear();
+    for (final row in result) {
+      final date = DateTime.parse(row['date'] as String);
+      final log = WorkoutLog(
+        type: row['type'] as String,
+        minutes: row['minutes'] as int,
+      );
+      final key = DateTime(date.year, date.month, date.day);
+      _workoutData.putIfAbsent(key, () => []).add(log);
+    }
+    setState(() {});
+  }
+
+  Future<void> _saveWorkoutLog(DateTime date, WorkoutLog log) async {
+    if (_db == null) return;
+    await _db!.insert('workout_logs', {
+      'date': dateOnly(date).toIso8601String(),
+      'type': log.type,
+      'minutes': log.minutes,
+    });
+    await _loadWorkoutData();
+  }
+
+  Future<void> _deleteWorkoutLog(DateTime date, int index) async {
+    if (_db == null) return;
+    final key = dateOnly(date);
+    final logs = _workoutData[key];
+    if (logs == null || index >= logs.length) return;
+    final log = logs[index];
+    // Delete the first matching row for this date/type/minutes
+    await _db!.delete(
+      'workout_logs',
+      where: 'date = ? AND type = ? AND minutes = ?',
+      whereArgs: [key.toIso8601String(), log.type, log.minutes],
+    );
+    await _loadWorkoutData();
+  }
+
+  Future<void> _deleteAllWorkoutLogsForDay(DateTime date) async {
+    if (_db == null) return;
+    await _db!.delete(
+      'workout_logs',
+      where: 'date = ?',
+      whereArgs: [dateOnly(date).toIso8601String()],
+    );
+    await _loadWorkoutData();
+  }
 
   DateTime dateOnly(DateTime dt) => DateTime(dt.year, dt.month, dt.day);
   DateTime get _today => dateOnly(DateTime.now());
@@ -68,10 +149,7 @@ class _WorkoutHomePageState extends State<WorkoutHomePage> {
     );
 
     if (result != null && result is WorkoutLog) {
-      setState(() {
-        final key = dateOnly(_selectedDay!);
-        _workoutData.putIfAbsent(key, () => []).add(result);
-      });
+      await _saveWorkoutLog(_selectedDay!, result);
     }
   }
 
@@ -89,10 +167,8 @@ class _WorkoutHomePageState extends State<WorkoutHomePage> {
             child: const Text('생각해볼게요'),
           ),
           TextButton(
-            onPressed: () {
-              setState(() {
-                _workoutData[dateOnly(_selectedDay!)] = [];
-              });
+            onPressed: () async {
+              await _deleteAllWorkoutLogsForDay(_selectedDay!);
               Navigator.pop(context);
             },
             child: const Text('정말 안 할래요'),
@@ -184,10 +260,10 @@ class _WorkoutHomePageState extends State<WorkoutHomePage> {
                                 Icons.refresh,
                                 color: Colors.teal,
                               ),
-                              onPressed: () {
-                                setState(() {
-                                  _workoutData.remove(_selectedDay!);
-                                });
+                              onPressed: () async {
+                                await _deleteAllWorkoutLogsForDay(
+                                  _selectedDay!,
+                                );
                               },
                             ),
                           ],
@@ -241,10 +317,11 @@ class _WorkoutHomePageState extends State<WorkoutHomePage> {
                                             Icons.delete,
                                             color: Colors.redAccent,
                                           ),
-                                          onPressed: () {
-                                            setState(() {
-                                              logs.removeAt(index);
-                                            });
+                                          onPressed: () async {
+                                            await _deleteWorkoutLog(
+                                              _selectedDay!,
+                                              index,
+                                            );
                                           },
                                         ),
                                       ],
