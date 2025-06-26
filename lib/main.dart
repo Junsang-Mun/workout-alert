@@ -278,7 +278,10 @@ class _WorkoutHomePageState extends State<WorkoutHomePage> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Theme.of(context).colorScheme.primary,
                   ),
-                  child: const Text('운동 했어요'),
+                  child: const Text(
+                    '운동 했어요',
+                    style: TextStyle(color: Colors.white),
+                  ),
                 ),
               ],
             ),
